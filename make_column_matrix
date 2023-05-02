@@ -1,0 +1,187 @@
+#!/usr/bin/env perl
+
+use strict;
+use Getopt::Long;
+
+my $print_usage = 0;
+
+my $usage = <<USAGE;
+
+ This script parses a text file of sequences and outputs
+ a tab delimited table of the character counts or 
+ character frequencies at each position.
+
+ It assumes that all the lines have sequences of equal length.
+
+ Reads from stdin, writes to stdout.
+
+ Mark Stenglein,  11/30/2017
+
+  Usage: $0 [-h] 
+
+   [-f]          output frequencies rather than absolute counts
+
+   [-s]          output Shannon index for each column
+
+   [-a]          output average (mean) Shannon index for all columns
+
+   [-h]          print this message
+
+USAGE
+
+if ((scalar @ARGV == 0) and -t STDIN) { print $usage and exit; }
+
+my $output_freq = 0;
+my $output_shannon_index = 0;
+my $output_mean_shannon_index = 0;
+
+GetOptions ("h" => \$print_usage, "f" => \$output_freq, "s" => \$output_shannon_index,"a" => \$output_mean_shannon_index);
+
+# hash will hold data
+my %matrix = ();
+my $first_line_length = undef;
+my $first_line = 1;
+my $num_lines = 0;
+my @shannon_indexes = ();
+
+while (<>)
+{
+	# get rid of newline
+   chomp;
+
+	# keep track of # lines
+	$num_lines += 1;
+
+	# split line into characters
+	my @chars = split(//, $_);
+
+	# how long is line?
+	my $line_length = scalar (@chars);
+
+	# keep track of 1st line length - they should all be this
+	if ($first_line)
+	{
+	   $first_line = 0;
+		$first_line_length = $line_length;
+	}
+
+	# double check all lines the same length
+	if ($line_length != $first_line_length)
+	{
+	   die "error: was expecting all lines to be of the same length.  Offending line (# $num_lines): $_\n";
+	}
+
+	# tally the # of occurences of each character at each position (in each column)
+	my $position = 0;
+	foreach my $char (@chars)
+	{
+	   $matrix{$char}{$position} += 1;
+		$position += 1;
+	}
+}
+
+# sanity check for empty file
+if ($num_lines == 0)
+{
+   exit;
+}
+
+# now, output matrix
+
+# what characters have we seen?
+my @observed_chars = keys %matrix;
+
+# sort chars alphabetically
+my @sorted_chars = sort { lc($a) cmp lc($b) } @observed_chars;
+
+# print a header line
+foreach my $char (@sorted_chars) 
+{
+   print "\t$char";
+}
+if ($output_shannon_index)
+{
+   print "\tShannon_Index";
+}
+print "\n";
+
+# output a row for each position (each column)
+for (my $i = 0; $i < $first_line_length; $i++)
+{
+   # calculate shannon index
+	# = sum[pi*log2(pi)]
+   my $shannon_index = 0;
+
+   # do 1-based rather than 0-based numbering
+   my $position = $i+1;
+	print "$position";
+   foreach my $char (@sorted_chars) 
+   {
+		my $count = $matrix{$char}{$i};
+		if (!$count)
+		{
+		   $count = 0;
+		}
+
+		my $freq = $count / $num_lines;
+      $shannon_index += (-1) * $freq * log2($freq);
+
+		if ($output_freq)
+		{
+			printf "\t%0.2e", $freq;
+		}
+		else
+		{
+         print "\t$count";
+		}
+   }
+
+	# store the shannon index of this column
+   push @shannon_indexes, $shannon_index;
+
+   if ($output_shannon_index)
+   {
+      printf "\t%0.3f", $shannon_index;
+   }
+	print "\n";
+}
+
+if ($output_mean_shannon_index)
+{
+   my $mean_si = mean(@shannon_indexes);
+	printf "mean Shannon Index:\t%0.3f\n", $mean_si;
+}
+
+# calc log2 of a number
+sub log2 
+{
+   my $n = shift;
+	if ($n == 0)
+	{
+	   return 0;
+	}
+	else
+	{
+      return log($n)/log(2);
+	}
+}
+
+# return mean of an array of values
+sub mean
+{
+   my @array = @_;
+	my $sum = 0;
+	my $count = 0;
+	foreach my $value (@array)
+	{
+	   $sum += $value;
+		$count += 1;
+	}
+
+	if ($count == 0)
+	{
+	   return 0;
+	}
+	my $mean = $sum / $count;
+	return $mean;
+}

@@ -1,0 +1,68 @@
+#!/usr/bin/env perl
+
+use strict;
+use Getopt::Long;
+
+my $print_usage = 0;
+
+my $usage = <<USAGE;
+
+ This script parses a text file and outputs the set 
+ of unique lines and the # of times each was observed, 
+ in decreasing order.
+
+ Reads from stdin, writes to stdout.
+
+ Mark Stenglein,  11/30/2017
+
+  Usage: $0 [-h] 
+
+   [-f]          output frequencies rather than absolute counts
+
+   [-h]          print this message
+
+USAGE
+
+if ((scalar @ARGV == 0) and -t STDIN) { print $usage and exit; }
+
+my $output_freq = 0;
+
+GetOptions ("h" => \$print_usage, "f" => \$output_freq);
+
+# hash will hold data
+my %line_counts = ();
+my $num_lines = 0;
+
+while (<>)
+{
+	# get rid of newline
+   chomp;
+
+	# keep track of # lines
+	$num_lines += 1;
+
+	$line_counts{$_} += 1;
+
+}
+
+# sanity check for empty file
+if ($num_lines == 0)
+{
+   exit;
+}
+
+# now, output lines and the # of times they occured, in decreasing order
+foreach my $line (sort {$line_counts{$b} <=> $line_counts{$a} } keys %line_counts)
+{
+	my $count = $line_counts{$line};
+	if ($output_freq)
+	{
+		my $freq = $count / $num_lines;
+      printf "%s\t%0.2e\n", $line,$freq;
+	}
+	else
+	{
+      print "$line\t$count\n";
+	}
+}
+
