@@ -3,7 +3,7 @@ PrimerID pipeline for bcWNV amplicon, and scripts for generating diversity metri
 All scripts require path changes to suit local directories. 
 PrimerID scripts require changes to primer sequences and UMI length depending on application.
 
-###PrimerID pipeline - 
+### PrimerID pipeline - 
 PrimerID_BarcodeGenerator_WNVBC_V1.sh (calls the 3 scripts below, uses paired-end fastq.gz files as input)
 TCS_Ebel_WNVBC.rb
 make_columm_matrix
