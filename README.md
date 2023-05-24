@@ -5,27 +5,27 @@ PrimerID scripts require changes to primer sequences and UMI length depending on
 
 ### PrimerID pipeline - 
 PrimerID_BarcodeGenerator_WNVBC_V1.sh (calls the 3 scripts below, uses paired-end fastq.gz files as input). <br>
-TCS_Ebel_WNVBC.rb
-make_columm_matrix
+TCS_Ebel_WNVBC.rb <br>
+make_columm_matrix <br>
 line_counts
 
 ### Filter out barcodes that are the result of mutation - 
-true_barcodes.sh (uses barcode_counts.txt files from PrimerID pipeline as input)
+true_barcodes.sh (uses barcode_counts.txt files from PrimerID pipeline as input) <br>
 
 ### Generate barcode population diversity metrics -
-barcode_analysis_V2.R (uses either barcode_counts.txt files or true_barcodes.txt files as input)
+barcode_analysis_V2.R (uses either barcode_counts.txt files or true_barcodes.txt files as input) 
 
 ### Generate richness and subsample values for bootstrap rarefaction -
-rarefaction_step1.sh (uses fastq.gz files as input)
+rarefaction_step1.sh (uses fastq.gz files as input) <br>
 bootstrap_rarefaction_V2.R (uses output of rarefaction_step1.sh as input)
 
 ### Generate barcode progression and maintenance plots, and barcode stock dynamics plots - 
-barcode_maintenance_MG.R (uses true_barcodes.txt files as input)
-intrahost_barcode_progression(input).R (uses true_barcodes.txt files as input)
+barcode_maintenance_MG.R (uses true_barcodes.txt files as input) <br>
+intrahost_barcode_progression(input).R (uses true_barcodes.txt files as input) <br>
 stock_barcode_progression.R (true_barcodes.txt stock sample files as input)
 
 ### Generate infection and transmission probability values - 
-mg_infection_probability.R (uses true_barcodes.txt files from midgut samples as input)
-sg_infection_probability.R (uses true_barcodes.txt files from salivary gland samples as input)
-transmission_probability.R (uses true_barcodes.txt files from saliva samples as input)
+mg_infection_probability.R (uses true_barcodes.txt files from midgut samples as input) <br>
+sg_infection_probability.R (uses true_barcodes.txt files from salivary gland samples as input) <br>
+transmission_probability.R (uses true_barcodes.txt files from saliva samples as input) <br>
 probability_merge.R (uses output files from the probability.R scripts listed above as input)
