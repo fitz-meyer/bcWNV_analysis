@@ -1,27 +1,29 @@
 library(tidyverse)
+library(magrittr)
 
 #set working directory and read in files:
 #change path to location of files.
 #sample files
 getwd()
-setwd("/Users/emilyfitzmeyer/Desktop/BC_WNV/ya_bcWNV/all_counts/")
+setwd("/Users/emilyfitzmeyer/Desktop/BC_WNV/Sequencing/all_counts/whole_tissue/true_counts/")
 column_classes <- c("c", "n")
 
 #make sure you are reading in samples from the same dpi and mosquito!
-ser <- read_delim("Ifnar_Ser_F80-C7_true_barcodes.txt", 
-                 col_types = column_classes, col_names = c("barcode", "count"))
-spl <- read_delim("Ifnar_Spl_F80-F7_true_barcodes.txt", 
-                 col_types = column_classes, col_names = c("barcode", "count"))
-ute <- read_delim("IFNAR_Ute_80_true_barcodes.txt", 
-                 col_types = column_classes, col_names = c("barcode", "count"))
-dec <- read_delim("Ifnar_Dec_F80-3-F8_true_barcodes.txt", 
-                 col_types = column_classes, col_names = c("barcode", "count"))
-pla <- read_delim("Ifnar_Pla_F80-3-G9_true_barcodes.txt", 
-                 col_types = column_classes, col_names = c("barcode", "count"))
+MG <- read_delim("cxt_mg_12dpi_9_S70_true_barcodes.txt", 
+                      col_types = column_classes, col_names = c("barcode", "count"))
+SG <- read_delim("cxt_sg_12dpi_9_S80_true_barcodes.txt", 
+                       col_types = column_classes, col_names = c("barcode", "count"))
+SL <- read_delim("cxt_sl_12dpi_9_S60_true_barcodes.txt", 
+                       col_types = column_classes, col_names = c("barcode", "count"))
 
-names <- c("ser","spl", "ute", "dec", "pla")
+#input file
+setwd("/Users/emilyfitzmeyer/Desktop/BC_WNV/Sequencing/all_counts/stocks/true_counts/")
+input <- read_delim("P2_merge_input.txt", 
+                       col_types = column_classes, col_names = c("barcode", "count"))
 
-list1 <- list(ser, spl, ute, dec, pla)
+names <- c("MG", "SG", "SL", "input")
+
+list1 <- list(MG, SG, SL, input)
 
 names(list1) <- names
 
@@ -44,48 +46,41 @@ all_samples <- list2 %>%
 #make NA entries '0'
 all_samples[is.na(all_samples)]<-0
 
-#select frequency columns for graph data
+#select columns of interest for graph data
 graph_data <- all_samples %>%
-  select(1, 3, 5, 7, 9, 11)
+  select(1, 3, 5, 7, 9) 
 
 #arrange by MG or input 
 graph_data <- graph_data %>%
-  arrange(desc(freq_spl))
+  arrange(desc(freq_MG))
 
 #generate separate dataframes so each element of the X axis gets its own rank
-
-sepSer <- graph_data[c("freq_ser")]
-sepSer <- sepSer %>%
-  mutate(sample = 0) %>%
-  mutate(barcode_id = 1:nrow(sepSer)) %>%
-  dplyr::rename("freq" = "freq_ser")
-
-sepSpl <- graph_data[c("freq_spl")]
-sepSpl <- sepSpl %>%
+sepMG <- graph_data[c("freq_MG")]
+sepMG <- sepMG %>%
   mutate(sample = 1) %>%
-  mutate(barcode_id = 1:nrow(sepSpl)) %>%
-  dplyr::rename("freq" = "freq_spl")
+  mutate(barcode_id = 1:nrow(sepMG)) %>%
+  dplyr::rename("freq" = "freq_MG")
 
-sepUte <- graph_data[c("freq_ute")]
-sepUte <- sepUte %>%
+sepSG <- graph_data[c("freq_SG")]
+sepSG <- sepSG %>%
   mutate(sample = 2) %>%
-  mutate(barcode_id = 1:nrow(sepUte)) %>%
-  dplyr::rename("freq" = "freq_ute")
+  mutate(barcode_id = 1:nrow(sepSG)) %>%
+  dplyr::rename("freq" = "freq_SG")
 
-sepDec <- graph_data[c("freq_dec")]
-sepDec <- sepDec %>%
+sepSL <- graph_data[c("freq_SL")]
+sepSL <- sepSL %>%
   mutate(sample = 3) %>%
-  mutate(barcode_id = 1:nrow(sepDec)) %>%
-  dplyr::rename("freq" = "freq_dec")
+  mutate(barcode_id = 1:nrow(sepSL)) %>%
+  dplyr::rename("freq" = "freq_SL")
 
-sepPla <- graph_data[c("freq_pla")]
-sepPla <- sepPla %>%
-  mutate(sample = 4) %>%
-  mutate(barcode_id = 1:nrow(sepPla)) %>%
-  dplyr::rename("freq" = "freq_pla")
+sep_input <- graph_data[c("freq_input")]
+sep_input <- sep_input %>%
+  mutate(sample = 0) %>%
+  mutate(barcode_id = 1:nrow(sep_input)) %>%
+  dplyr::rename("freq" = "freq_input")
 
 #bind these dataframes and arrange desc by barcode_id
-frequencies <- rbind(sepSer,sepSpl, sepUte, sepDec, sepPla) %>%
+frequencies <- rbind(sepMG, sepSG, sepSL, sep_input) %>%
   arrange(desc(barcode_id)) %>%
   mutate(barcode_id = as.factor(barcode_id)) #%>%
   #mutate(volume = as.factor(sample))
@@ -93,7 +88,7 @@ frequencies <- rbind(sepSer,sepSpl, sepUte, sepDec, sepPla) %>%
 #graph
 x<-(rep(c("red","green","blue","yellow","purple","grey","orange","brown","turquoise","pink","cyan","darkgrey"),1500))
 
-breaks <- c("Ser", "Spl", "Ute", "Dec", "Pla")
+breaks <- c("Input", "MG", "SG", "SL")
 
 ggplot(frequencies, aes(x = sample, y = freq, fill = barcode_id)) + 
   geom_area(alpha = 0.6, show.legend = FALSE) +
@@ -105,10 +100,10 @@ ggplot(frequencies, aes(x = sample, y = freq, fill = barcode_id)) +
   theme(axis.ticks.length = unit(0.25, "cm")) +
   theme(axis.title.x = element_text(size = 1), axis.title.y = element_text(size = 1)) +
   theme(plot.margin = unit(c(0.3,1,0.3,0.3), "cm")) +
-  ggtitle("IFNAR_80.3") +
+  ggtitle("cxt_9_12dpi") +
   theme(plot.title = element_text(vjust = 4)) +
   labs(x = "", y = "") +
-  scale_x_continuous(breaks = c(0,1,2,3,4), labels = stringr::str_wrap(breaks, width = 8), expand = c(0,0)) +
+  scale_x_continuous(breaks = c(0,1,2,3), labels = stringr::str_wrap(breaks, width = 8), expand = c(0,0)) +
   scale_y_continuous(breaks = seq(0,1, by=0.2), expand = c(0,0)) +
   scale_fill_manual(values = x)
 
