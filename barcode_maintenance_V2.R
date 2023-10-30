@@ -1,51 +1,44 @@
 library(tidyverse)
+library(magrittr)
 
 #set working directory and read in files:
 #change path to location of files.
 #sample files
 getwd()
-setwd("/Users/emilyfitzmeyer/Desktop/BC_WNV/ya_bcWNV/all_counts/")
+setwd("/Users/emilyfitzmeyer/Desktop/BC_WNV/Sequencing/all_counts/whole_tissue/true_counts/")
 column_classes <- c("c", "n")
 
-#read in all Ute, or Dec, or Pla samples
-ute1 <- read_delim("WT_Ute_259_true_barcodes.txt", 
+#read in all MG, or SG, or SL samples - comment out 'MG' dataframes as necessary
+MG1 <- read_delim("aea_mg_8dpi_30_S127_true_barcodes.txt", 
                  col_types = column_classes, col_names = c("barcode", "count"))
-dec1 <- read_delim("WT_Dec1_259.1_true_barcodes.txt", 
+MG2 <- read_delim("aea_mg_8dpi_31_S128_true_barcodes.txt", 
                  col_types = column_classes, col_names = c("barcode", "count"))
-dec2 <- read_delim("WT_Dec2_259.2_true_barcodes.txt", 
+MG3 <- read_delim("aea_mg_8dpi_33_S129_true_barcodes.txt", 
                  col_types = column_classes, col_names = c("barcode", "count"))
-dec3 <- read_delim("WT_Dec_F259-3-A2_true_barcodes.txt", 
+MG4 <- read_delim("aea_mg_8dpi_5_S122_true_barcodes.txt", 
                   col_types = column_classes, col_names = c("barcode", "count"))
-dec4 <- read_delim("WT_Dec_F259-4-B2_true_barcodes.txt", 
+MG5 <- read_delim("aea_mg_8dpi_6_S123_true_barcodes.txt", 
                   col_types = column_classes, col_names = c("barcode", "count"))
-dec5 <- read_delim("WT_Dec_F259-5-C2_true_barcodes.txt", 
+MG6 <- read_delim("aea_mg_8dpi_8_S124_true_barcodes.txt", 
                   col_types = column_classes, col_names = c("barcode", "count"))
-dec6 <- read_delim("WT_Dec_F259-6-D2_true_barcodes.txt", 
-                  col_types = column_classes, col_names = c("barcode", "count"))
-dec7 <- read_delim("WT_Dec_F259-7-E2_true_barcodes.txt", 
-                  col_types = column_classes, col_names = c("barcode", "count"))
-dec8 <- read_delim("WT_Dec_F259-8-F2_true_barcodes.txt", 
+MG7 <- read_delim("cxt_mg_4dpi_4_S5_true_barcodes.txt",
                  col_types = column_classes, col_names = c("barcode", "count"))
-pla1 <- read_delim("WT_Pla1_259.1_true_barcodes.txt", 
-                   col_types = column_classes, col_names = c("barcode", "count"))
-pla2 <- read_delim("WT_Pla2_259.2_true_barcodes.txt", 
-                   col_types = column_classes, col_names = c("barcode", "count"))
-pla3 <- read_delim("WT_Pla_F259-3-E4_true_barcodes.txt", 
-                   col_types = column_classes, col_names = c("barcode", "count"))
-pla4 <- read_delim("WT_Pla_F259-4-F4_true_barcodes.txt", 
-                   col_types = column_classes, col_names = c("barcode", "count"))
-pla5 <- read_delim("WT_Dec_F259-5-C2_true_barcodes.txt", 
-                   col_types = column_classes, col_names = c("barcode", "count"))
-pla6 <- read_delim("WT_Pla_F259-6-H4_true_barcodes.txt", 
-                   col_types = column_classes, col_names = c("barcode", "count"))
-pla7 <- read_delim("WT_Pla_F259-7-A5_true_barcodes.txt", 
-                   col_types = column_classes, col_names = c("barcode", "count"))
-pla8 <- read_delim("WT_Dec_F259-8-F2_true_barcodes.txt", 
-                   col_types = column_classes, col_names = c("barcode", "count"))
+MG8 <- read_delim("cxt_mg_4dpi_5_S6_true_barcodes.txt",
+                 col_types = column_classes, col_names = c("barcode", "count"))
+MG9 <- read_delim("cxt_mg_4dpi_8_S7_true_barcodes.txt",
+                 col_types = column_classes, col_names = c("barcode", "count"))
 
-names <- c("ute1", "dec1", "dec2", "dec3", "dec4", "dec5", "dec6", "dec7", "dec8",
-           "pla1", "pla2", "pla3", "pla4", "pla5", "pla6", "pla7", "pla8")
-list1 <- list(ute1, dec1, dec2, dec3, dec4, dec5, dec6, dec7, dec8, pla1, pla2, pla3, pla4, pla5, pla6, pla7, pla8)
+#input file
+setwd("/Users/emilyfitzmeyer/Desktop/BC_WNV/Sequencing/all_counts/stocks/true_counts/")
+input <- read_delim("P2_merge_input.txt", 
+                    col_types = column_classes, col_names = c("barcode", "count_input"))
+
+names <- c("MG1", "MG2", "MG3", "MG4", "MG5", "MG6",
+           "MG7", "MG8", "MG9", "input")
+
+list1 <- list(MG1, MG2, MG3, MG4, MG5, MG6,
+              MG7, MG8, MG9, input)
+
 names(list1) <- names
 
 #create function to generate frequency columns for each df and preserve + append df name to numeric columns
@@ -67,120 +60,77 @@ all_samples <- list2 %>%
 #make NA entries '0'
 all_samples[is.na(all_samples)]<-0
 
-#select frequency columns for graph data
+#select frequency columns for graph data - adjust to match sample number
 graph_data <- all_samples %>%
-  select(1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31, 33, 35) 
+  select(1, 3, 5, 7, 9, 11, 13, 15) 
 
 #arrange desc by input
 graph_data <- graph_data %>%
-  arrange(desc(freq_ute1))
+  arrange(desc(freq_input))
 
 #generate separate dataframes so each element of the X axis gets its own rank
-sepUte1 <- graph_data[c("freq_ute1")]
-sepUte1 <- sepUte1 %>%
-  mutate(sample = 0) %>%
-  mutate(barcode_id = 1:nrow(sepUte1)) %>%
-  dplyr::rename("freq" = "freq_ute1")
-
-sepDec1 <- graph_data[c("freq_dec1")]
-sepDec1 <- sepDec1 %>%
+sepMG1 <- graph_data[c("freq_MG1")]
+sepMG1 <- sepMG1 %>%
   mutate(sample = 1) %>%
-  mutate(barcode_id = 1:nrow(sepDec1)) %>%
-  dplyr::rename("freq" = "freq_dec1")
+  mutate(barcode_id = 1:nrow(sepMG1)) %>%
+  dplyr::rename("freq" = "freq_MG1")
 
-sepDec2 <- graph_data[c("freq_dec2")]
-sepDec2 <- sepDec2 %>%
+sepMG2 <- graph_data[c("freq_MG2")]
+sepMG2 <- sepMG2 %>%
   mutate(sample = 2) %>%
-  mutate(barcode_id = 1:nrow(sepDec2)) %>%
-  dplyr::rename("freq" = "freq_dec2")
+  mutate(barcode_id = 1:nrow(sepMG2)) %>%
+  dplyr::rename("freq" = "freq_MG2")
 
-sepDec3 <- graph_data[c("freq_dec3")]
-sepDec3 <- sepDec3 %>%
+sepMG3 <- graph_data[c("freq_MG3")]
+sepMG3 <- sepMG3 %>%
   mutate(sample = 3) %>%
-  mutate(barcode_id = 1:nrow(sepDec3)) %>%
-  dplyr::rename("freq" = "freq_dec3")
+  mutate(barcode_id = 1:nrow(sepMG3)) %>%
+  dplyr::rename("freq" = "freq_MG3")
 
-sepDec4 <- graph_data[c("freq_dec4")]
-sepDec4 <- sepDec4 %>%
+sepMG4 <- graph_data[c("freq_MG4")]
+sepMG4 <- sepMG4 %>%
   mutate(sample = 4) %>%
-  mutate(barcode_id = 1:nrow(sepDec4)) %>%
-  dplyr::rename("freq" = "freq_dec4")
+  mutate(barcode_id = 1:nrow(sepMG4)) %>%
+  dplyr::rename("freq" = "freq_MG4")
 
-sepDec5 <- graph_data[c("freq_dec5")]
-sepDec5 <- sepDec5 %>%
+sepMG5 <- graph_data[c("freq_MG5")]
+sepMG5 <- sepMG5 %>%
   mutate(sample = 5) %>%
-  mutate(barcode_id = 1:nrow(sepDec5)) %>%
-  dplyr::rename("freq" = "freq_dec5")
+  mutate(barcode_id = 1:nrow(sepMG5)) %>%
+  dplyr::rename("freq" = "freq_MG5")
 
-sepDec6 <- graph_data[c("freq_dec6")]
-sepDec6 <- sepDec6 %>%
+sepMG6 <- graph_data[c("freq_MG6")]
+sepMG6 <- sepMG6 %>%
   mutate(sample = 6) %>%
-  mutate(barcode_id = 1:nrow(sepDec6)) %>%
-  dplyr::rename("freq" = "freq_dec6")
+  mutate(barcode_id = 1:nrow(sepMG6)) %>%
+  dplyr::rename("freq" = "freq_MG6")
 
-sepDec7 <- graph_data[c("freq_dec7")]
-sepDec7 <- sepDec7 %>%
-  mutate(sample = 7) %>%
-  mutate(barcode_id = 1:nrow(sepDec7)) %>%
-  dplyr::rename("freq" = "freq_dec7")
+sepMG7 <- graph_data[c("freq_MG7")]
+sepMG7 <- sepMG7 %>%
+ mutate(sample = 7) %>%
+ mutate(barcode_id = 1:nrow(sepMG7)) %>%
+ dplyr::rename("freq" = "freq_MG7")
 
-sepDec8 <- graph_data[c("freq_dec8")]
-sepDec8 <- sepDec8 %>%
-  mutate(sample = 8) %>%
-  mutate(barcode_id = 1:nrow(sepDec8)) %>%
-  dplyr::rename("freq" = "freq_dec8")
+sepMG8 <- graph_data[c("freq_MG8")]
+sepMG8 <- sepMG8 %>%
+mutate(sample = 8) %>%
+mutate(barcode_id = 1:nrow(sepMG8)) %>%
+dplyr::rename("freq" = "freq_MG8")
 
-sepPla1 <- graph_data[c("freq_pla1")]
-sepPla1 <- sepPla1 %>%
-  mutate(sample = 9) %>%
-  mutate(barcode_id = 1:nrow(sepPla1)) %>%
-  dplyr::rename("freq" = "freq_pla1")
+sepMG9 <- graph_data[c("freq_MG9")]
+sepMG9 <- sepMG9 %>%
+ mutate(sample = 9) %>%
+ mutate(barcode_id = 1:nrow(sepMG9)) %>%
+ dplyr::rename("freq" = "freq_MG9")
 
-sepPla2 <- graph_data[c("freq_pla2")]
-sepPla2 <- sepPla2 %>%
-  mutate(sample = 10) %>%
-  mutate(barcode_id = 1:nrow(sepPla2)) %>%
-  dplyr::rename("freq" = "freq_pla2")
-
-sepPla3 <- graph_data[c("freq_pla3")]
-sepPla3 <- sepPla3 %>%
-  mutate(sample = 11) %>%
-  mutate(barcode_id = 1:nrow(sepPla3)) %>%
-  dplyr::rename("freq" = "freq_pla3")
-
-sepPla4 <- graph_data[c("freq_pla4")]
-sepPla4 <- sepPla4 %>%
-  mutate(sample = 12) %>%
-  mutate(barcode_id = 1:nrow(sepPla4)) %>%
-  dplyr::rename("freq" = "freq_pla4")
-
-sepPla5 <- graph_data[c("freq_pla5")]
-sepPla5 <- sepPla5 %>%
-  mutate(sample = 13) %>%
-  mutate(barcode_id = 1:nrow(sepPla5)) %>%
-  dplyr::rename("freq" = "freq_pla5")
-
-sepPla6 <- graph_data[c("freq_pla6")]
-sepPla6 <- sepPla6 %>%
-  mutate(sample = 14) %>%
-  mutate(barcode_id = 1:nrow(sepPla6)) %>%
-  dplyr::rename("freq" = "freq_pla6")
-
-sepPla7 <- graph_data[c("freq_pla7")]
-sepPla7 <- sepPla7 %>%
-  mutate(sample = 15) %>%
-  mutate(barcode_id = 1:nrow(sepPla7)) %>%
-  dplyr::rename("freq" = "freq_pla7")
-
-sepPla8 <- graph_data[c("freq_pla8")]
-sepPla8 <- sepPla8 %>%
-  mutate(sample = 16) %>%
-  mutate(barcode_id = 1:nrow(sepPla8)) %>%
-  dplyr::rename("freq" = "freq_pla8")
+sep_input <- graph_data[c("freq_input")]
+sep_input <- sep_input %>%
+  mutate(sample = 0) %>%
+  mutate(barcode_id = 1:nrow(sep_input)) %>%
+  dplyr::rename("freq" = "freq_input")
 
 #bind these dataframes and arrange desc by barcode_id
-frequencies <- rbind(sepUte1, sepDec1, sepDec2, sepDec3, sepDec4, sepDec5, sepDec6, sepDec7, sepDec8,
-                     sepPla1, sepPla2, sepPla3, sepPla4, sepPla5, sepPla6, sepPla7, sepPla8) %>%
+frequencies <- rbind(sepMG1, sepMG2, sepMG3, sepMG4, sepMG5, sepMG6, sepMG9, sep_input) %>%
   arrange(desc(barcode_id)) %>%
   mutate(barcode_id = as.factor(barcode_id))
 
@@ -189,8 +139,7 @@ frequencies <- rbind(sepUte1, sepDec1, sepDec2, sepDec3, sepDec4, sepDec5, sepDe
 x<-(rep(c("red","green","blue","yellow","purple","grey","orange","brown","turquoise","pink",
           "cyan","darkgrey"),10000))
 
-breaks <- c("Ute", "Dec1", "Dec2", "Dec3", "Dec4", "Dec5", "Dec6", "Dec7", "Dec8",
-            "Pla1", "Pla2", "Pla3", "Pla4", "Pla5", "Pla6", "Pla7", "Pla8")
+breaks <- c("Input", "1", "2", "3", "4", "5", "6", "7", "8", "9")
 
 #have to include 'stat="identity"' when plotting this data with geom_bar
 ggplot(frequencies, aes(x = sample, y = freq, fill = barcode_id)) + 
@@ -204,10 +153,10 @@ ggplot(frequencies, aes(x = sample, y = freq, fill = barcode_id)) +
   theme(axis.ticks.length = unit(0.25, "cm")) +
   theme(axis.title.x = element_text(size = 1), axis.title.y = element_text(size = 1)) +
   theme(plot.margin = unit(c(0.5,0.1,0.1,0.1), "cm")) +
-  ggtitle("WT_259") +
+  ggtitle("cxt_4dpi_MG_barcode_maintenance") +
   theme(plot.title = element_text(vjust = 4)) +
   labs(x = "", y = "") +
-  scale_x_continuous(breaks = c(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16), labels = breaks, expand = c(0,0)) +
+  scale_x_continuous(breaks = c(0,1,2,3,4,5,6), labels = breaks, expand = c(0,0)) +
   scale_y_continuous(breaks = seq(0,1, by=0.2), expand = c(0,0)) +
   scale_fill_manual(values = x)
 
