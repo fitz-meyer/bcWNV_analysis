@@ -15,11 +15,12 @@ column_classes <- c("c", "n")
 # read all files in using map_dfr
 # specify column types and column names ('counts' column tends to read in as both 'chr' and 'dbl'when col types aren't specified) 
 # mutate source column to cut down file path length:
-# change '65' to whatever number of characters in path precedes your filename +1
+value <- nchar(data_path)+1
 # use str_replace to remove redundant parts of filename "_barcode_counts.txt"
 df <- txt_files %>%
   map_dfr(read_delim, col_types = column_classes, col_names = c("barcodes", "counts"), .id = "source") %>%
-  mutate(source = str_sub(source, 65, -1)) %>%
+  #mutate(source = str_sub(source, 86, -1)) %>%
+  mutate(source = str_sub(source, value)) %>%
   mutate(source = str_replace(source, "_true_barcodes.txt", ""))
 
 # nest by "source" (the filenames)
