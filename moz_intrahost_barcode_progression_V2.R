@@ -48,7 +48,7 @@ all_samples[is.na(all_samples)]<-0
 
 #select columns of interest for graph data
 graph_data <- all_samples %>%
-  select(1, 3, 5, 7, 9) 
+  select(1, starts_with("freq"))
 
 #arrange by MG or input 
 graph_data <- graph_data %>%
