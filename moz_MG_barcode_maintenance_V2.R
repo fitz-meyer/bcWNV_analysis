@@ -1,47 +1,42 @@
 library(tidyverse)
-library(magrittr)
 
-#set working directory and read in files:
-#change path to location of files.
-#sample files
-getwd()
-setwd("/Users/emilyfitzmeyer/Desktop/BC_WNV/Sequencing/all_counts/whole_tissue/true_counts/")
+# define path to sample directory as "data_path":
+data_path <- "/Users/emilyfitzmeyer/Desktop/BC_WNV/Sequencing/all_counts/whole_tissue/true_counts/"
+
+txt_files <- fs::dir_ls(data_path)
+
+# assign column classes to "column_classes" (use shortcut values): 
 column_classes <- c("c", "n")
 
-#read in all MG, or SG, or SL samples - comment out 'MG' dataframes as necessary
-MG1 <- read_delim("aea_mg_8dpi_30_S127_true_barcodes.txt", 
-                 col_types = column_classes, col_names = c("barcode", "count"))
-MG2 <- read_delim("aea_mg_8dpi_31_S128_true_barcodes.txt", 
-                 col_types = column_classes, col_names = c("barcode", "count"))
-MG3 <- read_delim("aea_mg_8dpi_33_S129_true_barcodes.txt", 
-                 col_types = column_classes, col_names = c("barcode", "count"))
-MG4 <- read_delim("aea_mg_8dpi_5_S122_true_barcodes.txt", 
-                  col_types = column_classes, col_names = c("barcode", "count"))
-MG5 <- read_delim("aea_mg_8dpi_6_S123_true_barcodes.txt", 
-                  col_types = column_classes, col_names = c("barcode", "count"))
-MG6 <- read_delim("aea_mg_8dpi_8_S124_true_barcodes.txt", 
-                  col_types = column_classes, col_names = c("barcode", "count"))
-MG7 <- read_delim("cxt_mg_4dpi_4_S5_true_barcodes.txt",
-                 col_types = column_classes, col_names = c("barcode", "count"))
-MG8 <- read_delim("cxt_mg_4dpi_5_S6_true_barcodes.txt",
-                 col_types = column_classes, col_names = c("barcode", "count"))
-MG9 <- read_delim("cxt_mg_4dpi_8_S7_true_barcodes.txt",
-                 col_types = column_classes, col_names = c("barcode", "count"))
+# read all files in using map_dfr
+# specify column types and column names ('counts' column tends to read in as both 'chr' and 'dbl' when col types aren't specified) 
+# mutate source column to cut down file path length:
+value <- nchar(data_path)+1
+# ^ this value is input for removing the correct number of characters preceding the filebase
+# use str_replace to remove redundant parts of filename "_barcode_counts.txt" - edit to suit your filebases 
+df <- txt_files %>%
+  map_dfr(read_delim, col_types = column_classes, col_names = c("barcodes", "count"), .id = "source") %>%
+  mutate(source = str_sub(source, value)) %>%
+  mutate(source = str_replace(source, "63401_", "")) %>% #if you want to retain bird number comment this line out
+  mutate(source = str_replace(source, "_S\\d{2,3}_L008_true_barcodes.txt", ""))
 
-#input file
-setwd("/Users/emilyfitzmeyer/Desktop/BC_WNV/Sequencing/all_counts/stocks/true_counts/")
-input <- read_delim("P2_merge_input.txt", 
-                    col_types = column_classes, col_names = c("barcode", "count_input"))
+# read in input (can't get read in with the others because filebases differ too much)
+value2 <- nchar("/Users/emilyfitzmeyer/Desktop/MJS_test/")+1
+input <- read_delim("/Users/emilyfitzmeyer/Desktop/MJS_test/p1_barcode_merged.txt", 
+                    col_types = column_classes, col_names = c("barcodes", "count"), id = "source") %>%
+  mutate(source = str_sub(source, value2)) %>%
+  mutate(source = str_replace(source, "barcode_merged.txt", "input"))
 
-names <- c("MG1", "MG2", "MG3", "MG4", "MG5", "MG6",
-           "MG7", "MG8", "MG9", "input")
+# combine sample and input dataframes
+df <- rbind(df, input)
 
-list1 <- list(MG1, MG2, MG3, MG4, MG5, MG6,
-              MG7, MG8, MG9, input)
+# conver to list
+list_df <- split(df, df$source)
 
-names(list1) <- names
+# remove source column (info preserved in element names)
+list_df <- map(list_df, select, -source)
 
-#create function to generate frequency columns for each df and preserve + append df name to numeric columns
+
 barcode_frequency <- function(x, name) {
   totalumis <- sum(x[["count"]])
   x[["freq"]] <- ((x[["count"]])/totalumis)
@@ -51,22 +46,88 @@ barcode_frequency <- function(x, name) {
 }
 
 #map function over list
-list2 <- map2(list1, names(list1), barcode_frequency)
+list_df2 <- map2(list_df, names(list_df), barcode_frequency)
 
 #merge dfs by barcode
-all_samples <- list2 %>%
+all_samples <- list_df2 %>%
   reduce(full_join, by = "barcode")
 
 #make NA entries '0'
 all_samples[is.na(all_samples)]<-0
 
-#select frequency columns for graph data - adjust to match sample number
+# select barcode and frequency columns for graph data
 graph_data <- all_samples %>%
-  select(1, 3, 5, 7, 9, 11, 13, 15) 
+  select(1, starts_with("freq"))
 
-#arrange desc by input
+# arrange by input
 graph_data <- graph_data %>%
-  arrange(desc(freq_input))
+  arrange(desc(freq_p1_input))
+
+# OG input steps - skip if reading in files as above
+#===================================================
+# getwd()
+# setwd("/Users/emilyfitzmeyer/Desktop/BC_WNV/Sequencing/all_counts/whole_tissue/true_counts/")
+# column_classes <- c("c", "n")
+# 
+# #read in all MG, or SG, or SL samples - comment out 'MG' dataframes as necessary
+# MG1 <- read_delim("aea_mg_8dpi_30_S127_true_barcodes.txt", 
+#                   col_types = column_classes, col_names = c("barcode", "count"))
+# MG2 <- read_delim("aea_mg_8dpi_31_S128_true_barcodes.txt", 
+#                   col_types = column_classes, col_names = c("barcode", "count"))
+# MG3 <- read_delim("aea_mg_8dpi_33_S129_true_barcodes.txt", 
+#                   col_types = column_classes, col_names = c("barcode", "count"))
+# MG4 <- read_delim("aea_mg_8dpi_5_S122_true_barcodes.txt", 
+#                   col_types = column_classes, col_names = c("barcode", "count"))
+# MG5 <- read_delim("aea_mg_8dpi_6_S123_true_barcodes.txt", 
+#                   col_types = column_classes, col_names = c("barcode", "count"))
+# MG6 <- read_delim("aea_mg_8dpi_8_S124_true_barcodes.txt", 
+#                   col_types = column_classes, col_names = c("barcode", "count"))
+# MG7 <- read_delim("cxt_mg_4dpi_4_S5_true_barcodes.txt",
+#                   col_types = column_classes, col_names = c("barcode", "count"))
+# MG8 <- read_delim("cxt_mg_4dpi_5_S6_true_barcodes.txt",
+#                   col_types = column_classes, col_names = c("barcode", "count"))
+# MG9 <- read_delim("cxt_mg_4dpi_8_S7_true_barcodes.txt",
+#                   col_types = column_classes, col_names = c("barcode", "count"))
+# 
+# #input file
+# setwd("/Users/emilyfitzmeyer/Desktop/BC_WNV/Sequencing/all_counts/stocks/true_counts/")
+# input <- read_delim("P2_merge_input.txt", 
+#                     col_types = column_classes, col_names = c("barcode", "count_input"))
+# 
+# names <- c("MG1", "MG2", "MG3", "MG4", "MG5", "MG6",
+#            "MG7", "MG8", "MG9", "input")
+# 
+# list1 <- list(MG1, MG2, MG3, MG4, MG5, MG6,
+#               MG7, MG8, MG9, input)
+# 
+# names(list1) <- names
+# 
+# #create function to generate frequency columns for each df and preserve + append df name to numeric columns
+# barcode_frequency <- function(x, name) {
+#   totalumis <- sum(x[["count"]])
+#   x[["freq"]] <- ((x[["count"]])/totalumis)
+#   names(x) <- paste(names(x), name, sep = "_")
+#   colnames(x)[1] = "barcode"
+#   print(x)
+# }
+# 
+# #map function over list
+# list2 <- map2(list1, names(list1), barcode_frequency)
+# 
+# #merge dfs by barcode
+# all_samples <- list2 %>%
+#   reduce(full_join, by = "barcode")
+# 
+# #make NA entries '0'
+# all_samples[is.na(all_samples)]<-0
+# 
+# #select frequency columns for graph data - adjust to match sample number
+# graph_data <- all_samples %>%
+#   select(1, 3, 5, 7, 9, 11, 13, 15) 
+# 
+# #arrange desc by input
+# graph_data <- graph_data %>%
+#   arrange(desc(freq_input))
 
 #generate separate dataframes so each element of the X axis gets its own rank
 sepMG1 <- graph_data[c("freq_MG1")]
