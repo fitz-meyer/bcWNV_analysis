@@ -1,7 +1,5 @@
 library(tidyverse)
 library(QSutils)
-library(vegan)
-library(fs)
 
 #assign filepath to "data_path":
 data_path <- "/Users/emilyfitzmeyer/Desktop/BC_WNV/mgi_bcWNV/mgi_bcWNV_trueBC/"
